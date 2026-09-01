@@ -88,6 +88,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dialog-overlay] {
+  display: none !important;
+}
+
 /* ---- Glowing Utilities ---- */
 .text-gradient-gold {
   background: linear-gradient(135deg, #FFFBEB 0%, #FDE047 30%, #F59E0B 70%, #D97706 100%);

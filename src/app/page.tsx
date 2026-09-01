@@ -159,18 +159,13 @@ function makeCandidate(genderPref: string) {
 ------------------------------------------------------------------------- */
 function TopBrandLogo() {
   return (
-    <div className="flex items-center gap-2.5 select-none">
-      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-300 flex items-center justify-center shadow-[0_0_18px_rgba(245,158,11,0.6)]">
-        <ShieldCheck size={22} className="text-black stroke-[2.5]" />
-      </div>
-      <div>
-        <div className="text-sm sm:text-base font-black tracking-tight text-white leading-none">
-          BOUNCERS ON TIPS
-        </div>
-        <div className="text-[9px] font-bold text-amber-400 tracking-widest uppercase mt-0.5">
-          YOUR BACKUP. ON DEMAND.
-        </div>
-      </div>
+    <div className="flex items-center justify-center select-none py-1">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/logo.png"
+        alt="BOT - Bouncers On Tips"
+        className="h-12 sm:h-14 w-auto object-contain drop-shadow-[0_4px_16px_rgba(245,158,11,0.5)]"
+      />
     </div>
   );
 }
@@ -201,8 +196,13 @@ function TopBar({
         <div className="text-base sm:text-lg font-black text-zinc-100 tracking-tight">{title}</div>
         {stepText && <div className="text-[10.5px] font-bold text-amber-400 uppercase tracking-widest">{stepText}</div>}
       </div>
-      <div className="w-10 h-10 flex items-center justify-center">
-        <ShieldCheck size={20} className="text-amber-400/60" />
+      <div className="w-10 h-10 flex items-center justify-end">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo.png"
+          alt="BOT"
+          className="h-8 w-auto object-contain drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+        />
       </div>
     </div>
   );
@@ -1385,7 +1385,7 @@ function ActiveTrackingScreen({
 
       <BottomBar>
         <LiquidMetalButton
-          label="End Booking & Leave 5★ Rating"
+          label="End Booking & Rate Experience"
           fullWidth={true}
           onClick={onEnd}
           icon={Award}
@@ -1410,7 +1410,7 @@ function RatingScreen({ team, onDone }: { team: any[]; onDone: () => void }) {
       </div>
       <h2 className="text-2xl font-black text-white">Rate Your Experience</h2>
       <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-        Help us maintain India&apos;s highest security standard
+        Share your experience to help us improve security standards
       </p>
 
       <div className="flex justify-center gap-2.5 my-5">
@@ -1454,7 +1454,7 @@ function RatingScreen({ team, onDone }: { team: any[]; onDone: () => void }) {
 
       <BottomBar>
         <LiquidMetalButton
-          label="Submit 5★ Feedback"
+          label="Submit Feedback"
           fullWidth={true}
           onClick={onDone}
           icon={CheckCircle2}
