@@ -39,21 +39,26 @@ import {
   Bell,
   AlertTriangle,
   CheckCircle2,
-  Lock,
   Award,
-  BadgeCheck,
   Flame,
+  Activity,
+  Maximize2,
+  Smartphone,
+  Laptop,
 } from "lucide-react";
 import { MaleBouncerAvatar, FemaleBouncerAvatar, MixedTeamAvatar } from "@/components/ui/BouncerAvatars";
+import GoogleMapPicker from "@/components/maps/GoogleMapPicker";
+import GoogleMapLiveTracking from "@/components/maps/GoogleMapLiveTracking";
+import { ShaderBackgroundCanvas } from "@/components/ui/animated-shader-hero";
+import { LiquidMetalButton } from "@/components/ui/liquid-metal-button";
+import { soundEffects } from "@/lib/sound-effects";
+import { HOTSPOT_LOCATIONS, DEFAULT_BENGALURU_COORDS } from "@/lib/google-maps-config";
 
 /* -------------------------------------------------------------------------
    LUXURY DARK & NEON GOLD PALETTE
 ------------------------------------------------------------------------- */
 const GOLD_GRAD = "linear-gradient(135deg, #FFFBEB 0%, #FDE047 30%, #F59E0B 70%, #D97706 100%)";
-const GOLD_ACCENT = "linear-gradient(135deg, #FDE047 0%, #F59E0B 50%, #B45309 100%)";
-const CARD_BG = "rgba(18, 20, 26, 0.88)";
-const CARD_BORDER = "rgba(245, 158, 11, 0.18)";
-const CARD_BORDER_ACTIVE = "rgba(245, 158, 11, 0.85)";
+const CARD_BG = "rgba(14, 16, 22, 0.85)";
 
 /* -------------------------------------------------------------------------
    CATEGORIES & PRESETS
@@ -112,19 +117,6 @@ const GENDERS = [
   { id: "any", label: "Any Gender", desc: "Fastest Dispatch (< 5 min)", tag: "Instant" },
 ];
 
-const LOCALITIES = [
-  "Indiranagar 100ft Road, Bengaluru",
-  "4th Block, Koramangala, Bengaluru",
-  "Church Street / MG Road, Bengaluru",
-  "27th Main, HSR Layout, Bengaluru",
-  "ITPL Main Road, Whitefield, Bengaluru",
-  "11th Main, Jayanagar, Bengaluru",
-  "Electronic City Phase 1, Bengaluru",
-  "Outer Ring Road, Marathahalli, Bengaluru",
-  "BTM Layout 2nd Stage, Bengaluru",
-  "Hebbal / Sahakara Nagar, Bengaluru",
-];
-
 const NAMES = [
   "Vikram Singh", "Priya Sharma", "Arjun Reddy", "Rohit Malhotra", "Sanya Verma",
   "Karan Thapar", "Aditya Rawat", "Neha Kapoor", "Kabir Khan", "Ananya Sen",
@@ -168,95 +160,6 @@ const PROFILE = { name: "Rachit", phone: "+91 98765 43210" };
 /* -------------------------------------------------------------------------
    TACTILE UI PRIMITIVES
 ------------------------------------------------------------------------- */
-function GoldButton({
-  children,
-  onClick,
-  disabled,
-  style,
-  full = true,
-  icon: Icon,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  style?: React.CSSProperties;
-  full?: boolean;
-  icon?: React.ComponentType<{ size?: number; color?: string; className?: string }>;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="group relative overflow-hidden transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
-      style={{
-        width: full ? "100%" : "auto",
-        background: disabled
-          ? "#232630"
-          : "linear-gradient(135deg, #FDE047 0%, #F59E0B 50%, #D97706 100%)",
-        color: disabled ? "#94A3B8" : "#070707",
-        border: "none",
-        borderRadius: 18,
-        padding: "16px 24px",
-        fontSize: 15,
-        fontWeight: 900,
-        letterSpacing: 0.3,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        boxShadow: disabled
-          ? "none"
-          : "0 8px 30px -4px rgba(245, 158, 11, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.7)",
-        cursor: disabled ? "default" : "pointer",
-        ...style,
-      }}
-    >
-      <span className="relative z-10 flex items-center gap-2">
-        {children}
-        {Icon && <Icon size={18} color="#070707" />}
-      </span>
-      {!disabled && (
-        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
-      )}
-    </button>
-  );
-}
-
-function GhostButton({
-  children,
-  onClick,
-  style,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="transition-all duration-200 hover:bg-zinc-800/80 active:scale-[0.98]"
-      style={{
-        background: "rgba(24, 26, 32, 0.8)",
-        color: "#F8FAFC",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        borderRadius: 18,
-        padding: "14px 20px",
-        fontSize: 14,
-        fontWeight: 700,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        cursor: "pointer",
-        backdropFilter: "blur(10px)",
-        ...style,
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 function TopBar({
   title,
   onBack,
@@ -266,11 +169,16 @@ function TopBar({
   onBack: () => void;
   stepText?: string;
 }) {
+  const handleBack = () => {
+    soundEffects.playTap();
+    onBack();
+  };
+
   return (
     <div className="flex items-center justify-between px-5 pt-5 pb-3">
       <button
-        onClick={onBack}
-        className="w-10 h-10 rounded-2xl bg-zinc-900/90 border border-zinc-700/60 flex items-center justify-center text-zinc-200 hover:text-amber-400 hover:border-amber-500/50 transition-all active:scale-95 shadow-lg"
+        onClick={handleBack}
+        className="w-10 h-10 rounded-2xl bg-zinc-900/90 border border-zinc-700/60 flex items-center justify-center text-zinc-200 hover:text-amber-400 hover:border-amber-500/50 transition-all active:scale-95 shadow-lg cursor-pointer"
       >
         <ChevronLeft size={20} />
       </button>
@@ -318,25 +226,30 @@ function Card({
   selected?: boolean;
   className?: string;
 }) {
+  const handleClick = () => {
+    soundEffects.playTap();
+    if (onClick) onClick();
+  };
+
   return (
     <div
-      onClick={onClick}
+      onClick={handleClick}
       className={`relative overflow-hidden rounded-2xl transition-all duration-200 ${
-        onClick ? "cursor-pointer active:scale-[0.99] hover:border-amber-500/40" : ""
+        onClick ? "cursor-pointer active:scale-[0.99] hover:border-amber-500/50" : ""
       } ${className}`}
       style={{
-        background: selected ? "rgba(30, 26, 18, 0.95)" : CARD_BG,
+        background: selected ? "rgba(32, 28, 20, 0.95)" : CARD_BG,
         border: `1.5px solid ${selected ? "#F59E0B" : "rgba(255, 255, 255, 0.08)"}`,
         padding: 16,
         boxShadow: selected
           ? "0 0 0 1px rgba(245, 158, 11, 0.4), 0 12px 30px -10px rgba(245, 158, 11, 0.35)"
-          : "0 8px 24px -10px rgba(0, 0, 0, 0.5)",
-        backdropFilter: "blur(14px)",
+          : "0 8px 24px -10px rgba(0, 0, 0, 0.6)",
+        backdropFilter: "blur(16px)",
         ...style,
       }}
     >
       {selected && (
-        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center text-black shadow-md">
+        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center text-black shadow-md">
           <Check size={12} strokeWidth={3.5} />
         </div>
       )}
@@ -348,7 +261,7 @@ function Card({
 function BottomBar({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="fixed left-0 right-0 bottom-0 max-w-[440px] mx-auto px-5 pt-3 pb-[calc(18px+env(safe-area-inset-bottom))] z-40"
+      className="sticky bottom-0 left-0 right-0 w-full px-5 pt-3 pb-[calc(18px+env(safe-area-inset-bottom))] z-40"
       style={{
         background: "linear-gradient(0deg, #07080B 85%, rgba(7,8,11,0.6) 95%, transparent)",
       }}
@@ -363,7 +276,7 @@ function BottomBar({ children }: { children: React.ReactNode }) {
 ------------------------------------------------------------------------- */
 function LandingScreen({ go, toast }: { go: (step: string) => void; toast: (m: string) => void }) {
   return (
-    <div className="min-h-full flex flex-col">
+    <div className="min-h-full flex flex-col justify-between">
       {/* 1. TOP BRAND HEADER */}
       <div className="px-5 pt-6 flex items-center justify-between">
         <div className="relative w-36 h-12">
@@ -382,12 +295,12 @@ function LandingScreen({ go, toast }: { go: (step: string) => void; toast: (m: s
       </div>
 
       {/* 2. HERO STATEMENT */}
-      <div className="px-5 pt-6">
+      <div className="px-5 pt-6 text-center sm:text-left">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider mb-3">
           <Flame size={13} className="text-amber-400" />
           <span>India&apos;s 1st On-Demand Security App</span>
         </div>
-        <h1 className="text-4xl font-black text-white tracking-tight leading-[1.08]">
+        <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-[1.08]">
           Your Backup. <br />
           <span
             style={{
@@ -399,24 +312,33 @@ function LandingScreen({ go, toast }: { go: (step: string) => void; toast: (m: s
             On Demand.
           </span>
         </h1>
-        <p className="text-zinc-400 text-sm mt-2.5 leading-relaxed max-w-[340px]">
-          Book vetted bouncers, women&apos;s safety escorts, and VIP bodyguards instantly anywhere in Bengaluru.
+        <p className="text-zinc-400 text-sm mt-2.5 leading-relaxed max-w-[420px]">
+          Book vetted bouncers, women&apos;s safety escorts, and VIP bodyguards with live Google Maps telemetry across Bengaluru.
         </p>
       </div>
 
       {/* 3. DYNAMIC RADAR VISUALIZER */}
-      <div className="relative h-64 my-2 flex items-center justify-center">
+      <div className="relative h-64 sm:h-72 my-2 flex items-center justify-center">
         <HeroRadarVisualizer />
       </div>
 
-      {/* 4. PRIMARY CTAs */}
+      {/* 4. PRIMARY CTAs WITH LIQUID METAL SHADER BUTTON */}
       <div className="px-5 flex flex-col gap-3">
-        <GoldButton onClick={() => go("purpose")} icon={ArrowRight}>
-          Book Bouncers Now
-        </GoldButton>
-        <GhostButton onClick={() => toast("Bouncer Partner Onboarding is open.")}>
+        <div className="w-full flex justify-center">
+          <LiquidMetalButton
+            label="⚡ Book Bouncers Now"
+            fullWidth={true}
+            onClick={() => go("purpose")}
+            icon={ArrowRight}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => toast("Bouncer Partner Onboarding is open.")}
+          className="w-full py-3.5 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-zinc-300 font-bold text-sm hover:bg-zinc-800 transition-all cursor-pointer backdrop-blur-md"
+        >
           Become a BOT Partner
-        </GhostButton>
+        </button>
       </div>
 
       {/* 5. TRUST & SAFETY BADGES */}
@@ -438,16 +360,16 @@ function LandingScreen({ go, toast }: { go: (step: string) => void; toast: (m: s
       </div>
 
       {/* 6. HOW IT WORKS TIMELINE */}
-      <div className="px-5 pt-8 pb-28">
+      <div className="px-5 pt-8 pb-10">
         <div className="text-xs font-black text-zinc-400 tracking-wider uppercase mb-3">
           HOW IT WORKS
         </div>
-        <div className="space-y-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {[
             { step: "1", title: "Select your requirement", desc: "Choose party, women's safety, or VIP guard" },
             { step: "2", title: "Choose team & level", desc: "Select male, female, or mixed tactical squads" },
             { step: "3", title: "Live radar match", desc: "Nearby verified bouncers accept in real time" },
-            { step: "4", title: "Secure arrival with OTP", desc: "Live GPS tracking with emergency SOS protection" },
+            { step: "4", title: "Secure arrival with OTP", desc: "Live Google Maps tracking with SOS protection" },
           ].map((item) => (
             <div
               key={item.step}
@@ -470,16 +392,15 @@ function LandingScreen({ go, toast }: { go: (step: string) => void; toast: (m: s
 
 function HeroRadarVisualizer() {
   const nearbyBouncers = [
-    { name: "Priya S.", eta: "3m", rating: "4.9", isFemale: true, angle: 35, dist: 78 },
-    { name: "Vikram R.", eta: "4m", rating: "5.0", isFemale: false, angle: 140, dist: 84 },
-    { name: "Sanya V.", eta: "5m", rating: "4.8", isFemale: true, angle: 220, dist: 74 },
-    { name: "Arjun K.", eta: "6m", rating: "4.9", isFemale: false, angle: 310, dist: 88 },
+    { name: "Priya S.", eta: "3m", rating: "4.9", isFemale: true, angle: 35, dist: 84 },
+    { name: "Vikram R.", eta: "4m", rating: "5.0", isFemale: false, angle: 140, dist: 90 },
+    { name: "Sanya V.", eta: "5m", rating: "4.8", isFemale: true, angle: 220, dist: 80 },
+    { name: "Arjun K.", eta: "6m", rating: "4.9", isFemale: false, angle: 310, dist: 94 },
   ];
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      {/* Concentric Radar Rings */}
-      {[70, 120, 180, 240].map((size, idx) => (
+      {[70, 130, 190, 260].map((size, idx) => (
         <div
           key={idx}
           className="absolute rounded-full border border-amber-500/20"
@@ -491,21 +412,18 @@ function HeroRadarVisualizer() {
         />
       ))}
 
-      {/* Rotating Sonar Scanner */}
       <div
-        className="absolute w-60 h-60 rounded-full pointer-events-none animate-[spin_6s_linear_infinite]"
+        className="absolute w-64 h-64 rounded-full pointer-events-none animate-[spin_6s_linear_infinite]"
         style={{
           background:
             "conic-gradient(from 0deg, rgba(245,158,11,0.25) 0deg, rgba(245,158,11,0) 60deg, transparent 360deg)",
         }}
       />
 
-      {/* Center Pin */}
-      <div className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.8)] border-2 border-white/80">
-        <ShieldCheck size={28} className="text-black" />
+      <div className="relative z-10 w-16 h-16 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center shadow-[0_0_45px_rgba(245,158,11,0.8)] border-2 border-white/80">
+        <ShieldCheck size={32} className="text-black" />
       </div>
 
-      {/* Nearby Bouncer Character Chips */}
       {nearbyBouncers.map((b, i) => {
         const rad = (b.angle * Math.PI) / 180;
         const x = Math.cos(rad) * b.dist;
@@ -513,7 +431,7 @@ function HeroRadarVisualizer() {
         return (
           <div
             key={i}
-            className="absolute z-20 flex items-center gap-1.5 px-2 py-1 rounded-xl bg-black/90 border border-amber-500/40 shadow-xl backdrop-blur-md animate-[float_4s_ease-in-out_infinite]"
+            className="absolute z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-black/90 border border-amber-500/40 shadow-xl backdrop-blur-md animate-[float_4s_ease-in-out_infinite]"
             style={{
               left: `calc(50% + ${x}px)`,
               top: `calc(50% + ${y}px)`,
@@ -522,13 +440,13 @@ function HeroRadarVisualizer() {
             }}
           >
             {b.isFemale ? (
-              <FemaleBouncerAvatar className="w-7 h-7" />
+              <FemaleBouncerAvatar className="w-8 h-8" />
             ) : (
-              <MaleBouncerAvatar className="w-7 h-7" />
+              <MaleBouncerAvatar className="w-8 h-8" />
             )}
             <div className="text-left leading-none">
-              <div className="text-[10px] font-black text-zinc-100">{b.name}</div>
-              <div className="text-[9px] font-bold text-amber-400">{b.eta} away</div>
+              <div className="text-[11px] font-black text-zinc-100">{b.name}</div>
+              <div className="text-[9.5px] font-bold text-amber-400">{b.eta} away</div>
             </div>
           </div>
         );
@@ -555,7 +473,7 @@ function StepPurpose({
     <div>
       <TopBar title="What do you need backup for?" onBack={back} stepText="Step 1 of 7" />
       <ProgressDots step={1} total={7} />
-      <div className="px-5 pb-32 grid grid-cols-2 gap-2.5">
+      <div className="px-5 pb-8 grid grid-cols-2 sm:grid-cols-2 gap-3">
         {PURPOSES.map((p) => {
           const Icon = p.icon;
           const sel = booking.purpose === p.id;
@@ -574,7 +492,7 @@ function StepPurpose({
                 >
                   <Icon size={18} />
                 </div>
-                <div className="text-xs font-black text-white leading-snug">{p.label}</div>
+                <div className="text-xs sm:text-sm font-black text-white leading-snug">{p.label}</div>
               </div>
               <div className="text-[10.5px] text-zinc-400 mt-1 leading-tight">{p.desc}</div>
             </Card>
@@ -582,9 +500,12 @@ function StepPurpose({
         })}
       </div>
       <BottomBar>
-        <GoldButton disabled={!booking.purpose} onClick={next} icon={ArrowRight}>
-          Continue
-        </GoldButton>
+        <LiquidMetalButton
+          label="Continue"
+          fullWidth={true}
+          onClick={next}
+          icon={ArrowRight}
+        />
       </BottomBar>
     </div>
   );
@@ -608,12 +529,12 @@ function StepCount({
     <div>
       <TopBar title="Squad Size" onBack={back} stepText="Step 2 of 7" />
       <ProgressDots step={2} total={7} />
-      <div className="px-5">
+      <div className="px-5 pb-8">
         <div className="text-xs text-zinc-400 mb-4">How many bouncers do you require on site?</div>
 
         {/* Live Visual Squad Lineup */}
         <div className="flex items-center justify-center gap-2 py-4 mb-5 rounded-2xl bg-zinc-950/60 border border-zinc-800">
-          {Array.from({ length: Math.min(count, 5) }).map((_, i) => (
+          {Array.from({ length: Math.min(count, 6) }).map((_, i) => (
             <div key={i} className="animate-[scale-up_0.3s_ease]">
               {i % 2 === 0 ? (
                 <MaleBouncerAvatar className="w-12 h-12" />
@@ -622,18 +543,21 @@ function StepCount({
               )}
             </div>
           ))}
-          {count > 5 && (
+          {count > 6 && (
             <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-400 flex items-center justify-center text-sm font-black text-amber-300">
-              +{count - 5}
+              +{count - 6}
             </div>
           )}
         </div>
 
-        {/* Interactive Count Stepper */}
+        {/* Interactive Stepper */}
         <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900 border border-zinc-800 mb-5">
           <button
-            onClick={() => setBooking({ ...booking, count: Math.max(1, count - 1) })}
-            className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white active:scale-90 transition-all font-black text-lg"
+            onClick={() => {
+              soundEffects.playTap();
+              setBooking({ ...booking, count: Math.max(1, count - 1) });
+            }}
+            className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white active:scale-90 transition-all font-black text-lg cursor-pointer"
           >
             <Minus size={18} />
           </button>
@@ -644,8 +568,11 @@ function StepCount({
             </div>
           </div>
           <button
-            onClick={() => setBooking({ ...booking, count: Math.min(20, count + 1) })}
-            className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white active:scale-90 transition-all font-black text-lg"
+            onClick={() => {
+              soundEffects.playTap();
+              setBooking({ ...booking, count: Math.min(20, count + 1) });
+            }}
+            className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white active:scale-90 transition-all font-black text-lg cursor-pointer"
           >
             <Plus size={18} />
           </button>
@@ -658,8 +585,11 @@ function StepCount({
             return (
               <button
                 key={n}
-                onClick={() => setBooking({ ...booking, count: n })}
-                className={`py-3.5 rounded-xl font-black text-sm transition-all ${
+                onClick={() => {
+                  soundEffects.playTap();
+                  setBooking({ ...booking, count: n });
+                }}
+                className={`py-3.5 rounded-xl font-black text-sm transition-all cursor-pointer ${
                   sel
                     ? "bg-amber-400 text-black shadow-lg shadow-amber-500/30 scale-[1.02]"
                     : "bg-zinc-900 text-zinc-300 border border-zinc-800 hover:border-zinc-700"
@@ -672,9 +602,12 @@ function StepCount({
         </div>
       </div>
       <BottomBar>
-        <GoldButton onClick={next} icon={ArrowRight}>
-          Continue
-        </GoldButton>
+        <LiquidMetalButton
+          label="Continue"
+          fullWidth={true}
+          onClick={next}
+          icon={ArrowRight}
+        />
       </BottomBar>
     </div>
   );
@@ -695,7 +628,7 @@ function StepLevel({
     <div>
       <TopBar title="Choose Protection Level" onBack={back} stepText="Step 3 of 7" />
       <ProgressDots step={3} total={7} />
-      <div className="px-5 pb-32 space-y-3">
+      <div className="px-5 pb-8 space-y-3">
         {LEVELS.map((lvl) => {
           const sel = (booking.level || "pro") === lvl.id;
           return (
@@ -721,7 +654,6 @@ function StepLevel({
                 </div>
               </div>
 
-              {/* Bullet Features */}
               <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-zinc-800/80">
                 {lvl.features.map((f, i) => (
                   <div key={i} className="flex items-center gap-1.5 text-[11px] text-zinc-300">
@@ -735,9 +667,12 @@ function StepLevel({
         })}
       </div>
       <BottomBar>
-        <GoldButton onClick={next} icon={ArrowRight}>
-          Continue
-        </GoldButton>
+        <LiquidMetalButton
+          label="Continue"
+          fullWidth={true}
+          onClick={next}
+          icon={ArrowRight}
+        />
       </BottomBar>
     </div>
   );
@@ -758,8 +693,7 @@ function StepPreferences({
     <div>
       <TopBar title="Squad Preference" onBack={back} stepText="Step 4 of 7" />
       <ProgressDots step={4} total={7} />
-      <div className="px-5 pb-32 space-y-5">
-        {/* Presence Style */}
+      <div className="px-5 pb-8 space-y-5">
         <div>
           <div className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2.5">
             DRESS & PRESENCE TYPE
@@ -770,8 +704,11 @@ function StepPreferences({
               return (
                 <button
                   key={p.id}
-                  onClick={() => setBooking({ ...booking, presence: p.id })}
-                  className={`p-3 rounded-2xl text-center transition-all ${
+                  onClick={() => {
+                    soundEffects.playTap();
+                    setBooking({ ...booking, presence: p.id });
+                  }}
+                  className={`p-3 rounded-2xl text-center transition-all cursor-pointer ${
                     sel
                       ? "bg-amber-400 text-black font-black shadow-lg shadow-amber-500/20"
                       : "bg-zinc-900 border border-zinc-800 text-zinc-300 font-bold"
@@ -787,7 +724,6 @@ function StepPreferences({
           </div>
         </div>
 
-        {/* Squad Gender & Avatars */}
         <div>
           <div className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2.5">
             GENDER & SQUAD COMPOSITION
@@ -819,9 +755,12 @@ function StepPreferences({
         </div>
       </div>
       <BottomBar>
-        <GoldButton onClick={next} icon={ArrowRight}>
-          Continue
-        </GoldButton>
+        <LiquidMetalButton
+          label="Continue"
+          fullWidth={true}
+          onClick={next}
+          icon={ArrowRight}
+        />
       </BottomBar>
     </div>
   );
@@ -838,158 +777,73 @@ function StepLocation({
   next: () => void;
   back: () => void;
 }) {
-  const [query, setQuery] = useState(booking.address || "Indiranagar 100ft Road, Bengaluru");
-  const [pin, setPin] = useState(booking.pin || { x: 50, y: 46 });
-  const [showList, setShowList] = useState(false);
-  const mapRef = useRef<HTMLDivElement>(null);
+  const [address, setAddress] = useState(booking.address || "Indiranagar 100ft Road, Bengaluru");
 
-  const suggestions = LOCALITIES.filter((l) =>
-    l.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 5);
+  const handleLocationSelect = (loc: { address: string; lat: number; lng: number }) => {
+    setAddress(loc.address);
+    setBooking((prev: any) => ({ ...prev, address: loc.address, coords: { lat: loc.lat, lng: loc.lng } }));
+  };
 
-  function onDrag(e: any) {
-    if (!mapRef.current) return;
-    const rect = mapRef.current.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    let x = ((clientX - rect.left) / rect.width) * 100;
-    let y = ((clientY - rect.top) / rect.height) * 100;
-    x = Math.max(8, Math.min(92, x));
-    y = Math.max(8, Math.min(92, y));
-    setPin({ x, y });
-  }
-
-  function selectLocality(name: string) {
-    setQuery(name);
-    setShowList(false);
-    setPin({ x: rand(35, 65), y: rand(35, 60) });
-  }
-
-  function useCurrent() {
-    setQuery("Current GPS — Indiranagar, Bengaluru");
-    setPin({ x: 50, y: 46 });
-    setShowList(false);
-  }
+  const handleHotspotClick = (h: typeof HOTSPOT_LOCATIONS[0]) => {
+    soundEffects.playTap();
+    setAddress(h.address);
+    setBooking((prev: any) => ({ ...prev, address: h.address, coords: { lat: h.lat, lng: h.lng } }));
+  };
 
   return (
     <div>
-      <TopBar title="Service Location" onBack={back} stepText="Step 5 of 7" />
+      <TopBar title="Service Location (Google Maps)" onBack={back} stepText="Step 5 of 7" />
       <ProgressDots step={5} total={7} />
-      <div className="px-5 pb-32 space-y-3">
-        {/* Search Field */}
-        <div className="relative">
-          <Search size={17} className="absolute left-3.5 top-3.5 text-zinc-400" />
-          <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setShowList(true);
-            }}
-            onFocus={() => setShowList(true)}
-            placeholder="Search venue, street, or landmark"
-            className="w-full bg-zinc-900 border border-zinc-700/80 rounded-2xl pl-10 pr-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-400"
-          />
-        </div>
+      <div className="px-5 pb-8 space-y-3.5">
+        {/* Real Google Maps Location Picker */}
+        <GoogleMapPicker
+          initialAddress={address}
+          onLocationSelect={handleLocationSelect}
+        />
 
-        {showList && (
-          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden shadow-2xl">
-            <button
-              onClick={useCurrent}
-              className="w-full flex items-center gap-2.5 px-4 py-3 border-b border-zinc-800 text-left hover:bg-zinc-800/80"
-            >
-              <Navigation size={16} className="text-amber-400" />
-              <span className="text-xs font-black text-amber-400">Use Live GPS Location</span>
-            </button>
-            {(query ? suggestions : LOCALITIES.slice(0, 5)).map((l) => (
+        {/* Hotspots */}
+        <div>
+          <div className="text-[11px] font-black text-zinc-400 uppercase tracking-wider mb-2">
+            POPULAR BENGALURU HOTSPOTS
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {HOTSPOT_LOCATIONS.map((h) => (
               <button
-                key={l}
-                onClick={() => selectLocality(l)}
-                className="w-full flex items-center gap-2.5 px-4 py-3 border-b border-zinc-800/60 text-left hover:bg-zinc-800/80"
+                key={h.name}
+                type="button"
+                onClick={() => handleHotspotClick(h)}
+                className="px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-[11px] font-bold text-zinc-300 whitespace-nowrap hover:border-amber-400 hover:text-amber-300 transition-all active:scale-95 cursor-pointer"
               >
-                <MapPin size={15} className="text-zinc-400" />
-                <span className="text-xs text-zinc-200">{l}</span>
+                📍 {h.name}
               </button>
             ))}
           </div>
-        )}
+        </div>
 
-        {!showList && (
-          <>
-            {/* Interactive Vector Map Canvas */}
-            <div
-              ref={mapRef}
-              onMouseDown={onDrag}
-              onTouchStart={onDrag}
-              className="relative w-full h-64 rounded-3xl overflow-hidden border border-zinc-800 cursor-grab shadow-2xl"
-              style={{
-                background: `
-                  radial-gradient(circle at 40% 30%, #1a1e28, #090a0f 75%),
-                  repeating-linear-gradient(0deg, #1b202c 0, #1b202c 1px, transparent 1px, transparent 32px),
-                  repeating-linear-gradient(90deg, #1b202c 0, #1b202c 1px, transparent 1px, transparent 32px)`,
-              }}
-            >
-              {/* Radar Ring */}
-              <div
-                className="absolute rounded-full border border-amber-500/30 bg-amber-500/10 pointer-events-none animate-pulse"
-                style={{
-                  left: `${pin.x}%`,
-                  top: `${pin.y}%`,
-                  width: 140,
-                  height: 140,
-                  transform: "translate(-50%, -50%)",
-                }}
-              />
-
-              {/* Target Drop Pin */}
-              <div
-                className="absolute pointer-events-none flex flex-col items-center"
-                style={{
-                  left: `${pin.x}%`,
-                  top: `${pin.y}%`,
-                  transform: "translate(-50%, -100%)",
-                }}
-              >
-                <div className="w-8 h-8 rounded-full rounded-br-none -rotate-45 bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center shadow-[0_4px_20px_rgba(245,158,11,0.8)] border border-white">
-                  <ShieldCheck size={14} className="text-black rotate-45" />
-                </div>
-              </div>
-
-              <div className="absolute bottom-2.5 inset-x-3 bg-black/80 backdrop-blur-md rounded-xl py-1.5 px-3 text-[11px] font-bold text-center text-zinc-300 border border-zinc-800">
-                Drag anywhere on the map to set exact spot
-              </div>
+        {/* Selected Address Display */}
+        <Card className="flex items-center gap-3 bg-zinc-900/90">
+          <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-amber-400 flex-shrink-0">
+            <MapPin size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-black text-white truncate">{address}</div>
+            <div className="text-[11px] text-emerald-400 font-bold mt-0.5">
+              18 verified bouncers available within 5 km
             </div>
-
-            {/* Selected Location Card */}
-            <Card className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-amber-400 flex-shrink-0">
-                <MapPin size={20} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-black text-white truncate">{query}</div>
-                <div className="text-[11px] text-emerald-400 font-bold mt-0.5">
-                  18 verified bouncers available within 5 km
-                </div>
-              </div>
-            </Card>
-          </>
-        )}
+          </div>
+        </Card>
       </div>
 
       <BottomBar>
-        {showList ? (
-          <GhostButton onClick={() => setShowList(false)}>Close Search</GhostButton>
-        ) : (
-          <GoldButton
-            disabled={!query}
-            onClick={() => {
-              setBooking({ ...booking, address: query, pin });
-              next();
-            }}
-            icon={ArrowRight}
-          >
-            Confirm Location
-          </GoldButton>
-        )}
+        <LiquidMetalButton
+          label="Confirm Location"
+          fullWidth={true}
+          onClick={() => {
+            setBooking({ ...booking, address });
+            next();
+          }}
+          icon={ArrowRight}
+        />
       </BottomBar>
     </div>
   );
@@ -1027,27 +881,31 @@ function StepDateTime({
     <div>
       <TopBar title="Schedule Date & Time" onBack={back} stepText="Step 6 of 7" />
       <ProgressDots step={6} total={7} />
-      <div className="px-5 pb-32 space-y-4">
-        {/* Date Field */}
+      <div className="px-5 pb-8 space-y-4">
         <div>
           <div className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">DATE</div>
           <input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(e) => {
+              soundEffects.playTap();
+              setDate(e.target.value);
+            }}
             className="w-full bg-zinc-900 border border-zinc-700/80 rounded-2xl px-4 py-3 text-sm text-zinc-100 font-bold focus:outline-none focus:border-amber-400"
           />
         </div>
 
-        {/* Start Time Chips */}
         <div>
           <div className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">START TIME</div>
           <div className="grid grid-cols-3 gap-2">
             {times.map((t) => (
               <button
                 key={t}
-                onClick={() => setTime(t)}
-                className={`py-3 rounded-xl text-xs font-black transition-all ${
+                onClick={() => {
+                  soundEffects.playTap();
+                  setTime(t);
+                }}
+                className={`py-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   time === t
                     ? "bg-amber-400 text-black shadow-lg shadow-amber-500/20"
                     : "bg-zinc-900 border border-zinc-800 text-zinc-300"
@@ -1059,7 +917,6 @@ function StepDateTime({
           </div>
         </div>
 
-        {/* Duration Selection */}
         <div>
           <div className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
             DURATION (MINIMUM 1 HOUR)
@@ -1068,8 +925,11 @@ function StepDateTime({
             {durations.map((d) => (
               <button
                 key={d}
-                onClick={() => setDuration(d)}
-                className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${
+                onClick={() => {
+                  soundEffects.playTap();
+                  setDuration(d);
+                }}
+                className={`flex-1 py-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   duration === d
                     ? "bg-amber-400 text-black shadow-lg shadow-amber-500/20"
                     : "bg-zinc-900 border border-zinc-800 text-zinc-300"
@@ -1081,7 +941,6 @@ function StepDateTime({
           </div>
         </div>
 
-        {/* Calculated Window Card */}
         {date && (
           <Card className="flex items-center justify-center gap-2.5 py-3.5 bg-amber-500/10 border-amber-500/30">
             <Clock size={16} className="text-amber-400" />
@@ -1093,16 +952,15 @@ function StepDateTime({
       </div>
 
       <BottomBar>
-        <GoldButton
-          disabled={!date}
+        <LiquidMetalButton
+          label="Continue"
+          fullWidth={true}
           onClick={() => {
             setBooking({ ...booking, date, time, duration, endTime: endTime() });
             next();
           }}
           icon={ArrowRight}
-        >
-          Continue
-        </GoldButton>
+        />
       </BottomBar>
     </div>
   );
@@ -1129,8 +987,7 @@ function StepSummary({
     <div>
       <TopBar title="Review & Confirm" onBack={back} stepText="Step 7 of 7" />
       <ProgressDots step={7} total={7} />
-      <div className="px-5 pb-32 space-y-3.5">
-        {/* Specifications */}
+      <div className="px-5 pb-8 space-y-3.5">
         <Card className="space-y-2.5">
           <div className="text-[11px] font-black text-amber-400 tracking-wider uppercase">
             BOOKING DETAILS
@@ -1150,7 +1007,6 @@ function StepSummary({
           ))}
         </Card>
 
-        {/* Pricing Card */}
         <Card className="space-y-2.5">
           <div className="text-[11px] font-black text-amber-400 tracking-wider uppercase">
             ESTIMATED PRICING
@@ -1182,7 +1038,6 @@ function StepSummary({
           </div>
         </Card>
 
-        {/* Guarantee Banner */}
         <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-300">
           <ShieldCheck size={16} className="text-emerald-400 flex-shrink-0" />
           <span>Backed by 100% On-Site Arrival Guarantee & Emergency Support</span>
@@ -1190,9 +1045,12 @@ function StepSummary({
       </div>
 
       <BottomBar>
-        <GoldButton onClick={() => next(total)} icon={RadarIcon}>
-          Confirm & Find Bouncers
-        </GoldButton>
+        <LiquidMetalButton
+          label="⚡ Confirm & Find Bouncers"
+          fullWidth={true}
+          onClick={() => next(total)}
+          icon={RadarIcon}
+        />
       </BottomBar>
     </div>
   );
@@ -1213,19 +1071,20 @@ function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: 
 
   useEffect(() => {
     let acceptedCount = 0;
-    let t = 400;
+    let t = 300;
     const order = [...candidates].sort(() => Math.random() - 0.5);
 
     order.forEach((c) => {
-      t += rand(500, 1200);
+      t += rand(400, 900);
       const timer = setTimeout(() => {
         setCandidates((prev) => {
-          const willAccept = acceptedCount < needed && Math.random() < 0.65;
+          const willAccept = acceptedCount < needed && Math.random() < 0.7;
           const idx = prev.findIndex((p) => p.id === c.id);
           if (idx === -1) return prev;
           const next = [...prev];
           if (willAccept && acceptedCount < needed) {
             acceptedCount += 1;
+            soundEffects.playTap();
             next[idx] = { ...next[idx], status: "accepted" };
             setAccepted((a) => (a.find((x) => x.id === c.id) ? a : [...a, next[idx]]));
           } else if (acceptedCount >= needed) {
@@ -1245,6 +1104,7 @@ function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: 
 
   useEffect(() => {
     if (accepted.length >= needed) {
+      soundEffects.playSuccessChime();
       const done = setTimeout(() => onDone(accepted.slice(0, needed)), 900);
       return () => clearTimeout(done);
     }
@@ -1257,14 +1117,13 @@ function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: 
     <div className="px-5 pt-8 pb-10">
       <div className="text-center mb-6">
         <div className="text-xs font-black text-amber-400 tracking-wider uppercase">
-          {accepted.length >= needed ? "TEAM CONFIRMED" : "PINGING FLEET IN BENGLURU"}
+          {accepted.length >= needed ? "TEAM CONFIRMED" : "PINGING FLEET IN BENGALURU"}
         </div>
         <div className="text-3xl font-black text-white mt-1">
           {accepted.length} / {needed} <span className="text-zinc-400 text-lg font-bold">Confirmed</span>
         </div>
       </div>
 
-      {/* High-Tech Circular Radar Meter */}
       <div className="relative w-52 h-52 mx-auto mb-6 flex items-center justify-center">
         <svg className="w-52 h-52 absolute inset-0 -rotate-90">
           <circle cx="104" cy="104" r="92" fill="none" stroke="#1E222D" strokeWidth="10" />
@@ -1288,7 +1147,6 @@ function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: 
         </div>
       </div>
 
-      {/* Metrics Row */}
       <div className="grid grid-cols-3 gap-2.5 mb-5">
         <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-center">
           <div className="text-xl font-black text-emerald-400">{accepted.length}</div>
@@ -1304,7 +1162,6 @@ function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: 
         </div>
       </div>
 
-      {/* Stream of Incoming Candidate Responses */}
       <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
         {candidates
           .filter((c) => c.status !== "expired" && c.status !== "waiting")
@@ -1355,13 +1212,12 @@ function TeamConfirmedScreen({
   onTrack: () => void;
 }) {
   return (
-    <div className="px-5 pt-8 pb-32 text-center">
-      {/* Golden Celebratory Badge */}
+    <div className="px-5 pt-8 pb-8 text-center">
       <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center mx-auto mb-4 shadow-[0_10px_35px_rgba(245,158,11,0.6)]">
         <CheckCircle2 size={36} className="text-black" />
       </div>
       <h2 className="text-2xl font-black text-white">Your Team is Confirmed!</h2>
-      <p className="text-xs text-zinc-400 mt-1 max-w-[280px] mx-auto">
+      <p className="text-xs text-zinc-400 mt-1 max-w-[320px] mx-auto">
         {team.length} verified security captains are assigned & dispatching to your location.
       </p>
 
@@ -1374,7 +1230,6 @@ function TeamConfirmedScreen({
         <div className="text-[10px] text-zinc-400 mt-1">Share this OTP with captains upon arrival</div>
       </div>
 
-      {/* Assigned Captain Cards */}
       <div className="mt-5 space-y-2.5 text-left">
         {team.map((m) => (
           <Card key={m.id} className="flex items-center gap-3.5">
@@ -1397,16 +1252,19 @@ function TeamConfirmedScreen({
       </div>
 
       <BottomBar>
-        <GoldButton onClick={onTrack} icon={ArrowRight}>
-          Track Live Squad
-        </GoldButton>
+        <LiquidMetalButton
+          label="Track Live Squad on Google Maps"
+          fullWidth={true}
+          onClick={onTrack}
+          icon={ArrowRight}
+        />
       </BottomBar>
     </div>
   );
 }
 
 /* -------------------------------------------------------------------------
-   SCREEN: ACTIVE TRACKING
+   SCREEN: ACTIVE TRACKING (REAL GOOGLE MAPS)
 ------------------------------------------------------------------------- */
 function ActiveTrackingScreen({
   team,
@@ -1428,52 +1286,25 @@ function ActiveTrackingScreen({
   }, []);
 
   return (
-    <div className="pb-32">
-      {/* Header status */}
+    <div className="pb-8">
       <div className="px-5 pt-6 pb-3">
         <div className="text-[11px] font-black text-amber-400 uppercase tracking-wider">
-          LIVE ASSIGNMENT
+          LIVE GOOGLE MAPS DISPATCH
         </div>
         <div className="text-2xl font-black text-white mt-0.5">
           {eta > 0 ? `Squad Arriving in ~${eta} mins` : "Squad on Site & Active"}
         </div>
       </div>
 
-      {/* Live Vector Map Simulation */}
+      {/* Real Google Maps Live Tracking */}
       <div className="px-5">
-        <div
-          className="relative h-56 rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl"
-          style={{
-            background: `
-              radial-gradient(circle at 40% 30%, #171b26, #090a0f 75%),
-              repeating-linear-gradient(0deg, #1b202c 0, #1b202c 1px, transparent 1px, transparent 32px),
-              repeating-linear-gradient(90deg, #1b202c 0, #1b202c 1px, transparent 1px, transparent 32px)`,
-          }}
-        >
-          {/* Client Destination Badge */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center text-black shadow-[0_0_30px_rgba(245,158,11,0.9)]">
-            <MapPin size={16} />
-          </div>
-
-          {/* Moving Squad Pins */}
-          {team.map((_, i) => (
-            <div
-              key={i}
-              className="absolute animate-bounce"
-              style={{
-                left: `${35 + i * 28}%`,
-                top: `${42 + (i % 2) * 16}%`,
-              }}
-            >
-              <div className="w-8 h-8 rounded-full bg-black border-2 border-amber-400 flex items-center justify-center text-amber-400 shadow-lg">
-                <ShieldCheck size={14} />
-              </div>
-            </div>
-          ))}
-        </div>
+        <GoogleMapLiveTracking
+          centerCoords={booking.coords || DEFAULT_BENGALURU_COORDS}
+          team={team}
+        />
       </div>
 
-      {/* Captain Actions Cards */}
+      {/* Captain Action Cards */}
       <div className="px-5 mt-4 space-y-2.5">
         {team.map((m) => (
           <Card key={m.id} className="flex items-center gap-3.5">
@@ -1484,18 +1315,18 @@ function ActiveTrackingScreen({
             )}
             <div className="flex-1 min-w-0">
               <div className="text-xs font-black text-white truncate">{m.name}</div>
-              <div className="text-[10.5px] text-zinc-400">★ {m.rating} • En Route</div>
+              <div className="text-[10.5px] text-zinc-400">★ {m.rating} • En Route (Live GPS)</div>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => toast(`Calling ${m.name} (+91 98xxx)...`)}
-                className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-amber-400 hover:bg-amber-400 hover:text-black transition-all"
+                className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-amber-400 hover:bg-amber-400 hover:text-black transition-all cursor-pointer"
               >
                 <Phone size={16} />
               </button>
               <button
                 onClick={() => toast(`Opening live chat with ${m.name}`)}
-                className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:bg-zinc-700 transition-all"
+                className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:bg-zinc-700 transition-all cursor-pointer"
               >
                 <MessageCircle size={16} />
               </button>
@@ -1528,8 +1359,11 @@ function ActiveTrackingScreen({
       {/* SOS Button */}
       <div className="px-5 mt-4">
         <button
-          onClick={() => setSos(true)}
-          className="w-full py-3.5 rounded-2xl bg-rose-950/80 border border-rose-600/60 text-rose-300 font-black text-xs flex items-center justify-center gap-2 hover:bg-rose-900 transition-all shadow-lg"
+          onClick={() => {
+            soundEffects.playTap();
+            setSos(true);
+          }}
+          className="w-full py-3.5 rounded-2xl bg-rose-950/80 border border-rose-600/60 text-rose-300 font-black text-xs flex items-center justify-center gap-2 hover:bg-rose-900 transition-all shadow-lg cursor-pointer"
         >
           <AlertTriangle size={16} />
           <span>EMERGENCY SOS / ALERT SUPPORT</span>
@@ -1539,30 +1373,39 @@ function ActiveTrackingScreen({
       {/* SOS Modal */}
       {sos && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end justify-center">
-          <div className="w-full max-w-[440px] bg-zinc-950 border border-zinc-800 rounded-t-3xl p-6 space-y-4">
+          <div className="w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-t-3xl p-6 space-y-4">
             <div className="text-lg font-black text-white">Emergency Response</div>
             <div className="text-xs text-zinc-400 leading-relaxed">
               Your live GPS coordinates and booking telemetry will be broadcast to our rapid reaction team and 112 emergency line.
             </div>
-            <GoldButton
+            <button
+              type="button"
               onClick={() => {
                 setSos(false);
                 toast("Emergency reaction team alerted.");
               }}
-              style={{
-                background: "linear-gradient(135deg, #EF4444, #B91C1C)",
-                boxShadow: "0 8px 30px rgba(220, 38, 38, 0.5)",
-              }}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-red-600 to-rose-700 text-white font-black text-sm shadow-xl shadow-red-600/40 cursor-pointer"
             >
               Broadcast Emergency Now
-            </GoldButton>
-            <GhostButton onClick={() => setSos(false)}>Cancel</GhostButton>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSos(false)}
+              className="w-full py-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-bold cursor-pointer"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
 
       <BottomBar>
-        <GoldButton onClick={onEnd}>End Booking & Leave 5★ Rating</GoldButton>
+        <LiquidMetalButton
+          label="End Booking & Leave 5★ Rating"
+          fullWidth={true}
+          onClick={onEnd}
+          icon={Award}
+        />
       </BottomBar>
     </div>
   );
@@ -1577,7 +1420,7 @@ function RatingScreen({ team, onDone }: { team: any[]; onDone: () => void }) {
   const [overall, setOverall] = useState(5);
 
   return (
-    <div className="px-5 pt-8 pb-32 text-center">
+    <div className="px-5 pt-8 pb-8 text-center">
       <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-3 text-amber-400">
         <Award size={30} />
       </div>
@@ -1586,13 +1429,15 @@ function RatingScreen({ team, onDone }: { team: any[]; onDone: () => void }) {
         Help us maintain India&apos;s highest security standard
       </p>
 
-      {/* Overall Stars */}
       <div className="flex justify-center gap-2 my-5">
         {[1, 2, 3, 4, 5].map((n) => (
           <Star
             key={n}
             size={36}
-            onClick={() => setOverall(n)}
+            onClick={() => {
+              soundEffects.playTap();
+              setOverall(n);
+            }}
             className="cursor-pointer transition-all hover:scale-110"
             fill={n <= overall ? "#F59E0B" : "none"}
             color={n <= overall ? "#F59E0B" : "#3F3F46"}
@@ -1600,7 +1445,6 @@ function RatingScreen({ team, onDone }: { team: any[]; onDone: () => void }) {
         ))}
       </div>
 
-      {/* Dimensional Ratings */}
       <div className="space-y-3 text-left">
         {cats.map((c) => (
           <div key={c} className="flex justify-between items-center p-3 rounded-xl bg-zinc-900 border border-zinc-800">
@@ -1610,7 +1454,10 @@ function RatingScreen({ team, onDone }: { team: any[]; onDone: () => void }) {
                 <Star
                   key={n}
                   size={18}
-                  onClick={() => setRatings({ ...ratings, [c]: n })}
+                  onClick={() => {
+                    soundEffects.playTap();
+                    setRatings({ ...ratings, [c]: n });
+                  }}
                   className="cursor-pointer"
                   fill={n <= (ratings[c] || 5) ? "#F59E0B" : "none"}
                   color={n <= (ratings[c] || 5) ? "#F59E0B" : "#3F3F46"}
@@ -1622,14 +1469,19 @@ function RatingScreen({ team, onDone }: { team: any[]; onDone: () => void }) {
       </div>
 
       <BottomBar>
-        <GoldButton onClick={onDone}>Submit 5★ Feedback</GoldButton>
+        <LiquidMetalButton
+          label="Submit 5★ Feedback"
+          fullWidth={true}
+          onClick={onDone}
+          icon={CheckCircle2}
+        />
       </BottomBar>
     </div>
   );
 }
 
 /* -------------------------------------------------------------------------
-   APP ROOT (Single Page Shell with Desktop Showcase Frame)
+   APP ROOT (Responsive Full-Width Canvas + Shader Background)
 ------------------------------------------------------------------------- */
 const WIZARD_STEPS = ["purpose", "count", "level", "preferences", "location", "datetime", "summary"];
 
@@ -1642,6 +1494,7 @@ export default function App() {
   const [toastMsg, setToastMsg] = useState("");
 
   const toast = useCallback((m: string) => {
+    soundEffects.playTap();
     setToastMsg(m);
     setTimeout(() => setToastMsg(""), 2400);
   }, []);
@@ -1719,25 +1572,24 @@ export default function App() {
   else if (screen === "rating") content = <RatingScreen team={team} onDone={finishRating} />;
 
   return (
-    <div className="min-h-screen bg-[#060709] text-zinc-100 flex flex-col items-center justify-center selection:bg-amber-400 selection:text-black font-sans">
-      {/* Background Ambient Radial Glow */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[140px]" />
-        <div className="absolute bottom-10 left-1/3 w-[500px] h-[500px] bg-yellow-600/5 rounded-full blur-[160px]" />
+    <div className="relative min-h-screen bg-[#050608] text-zinc-100 flex flex-col items-center selection:bg-amber-400 selection:text-black font-sans overflow-x-hidden">
+      {/* 1. Interactive WebGL Shader Animated Background (Covers entire screen with dark gold obsidian cyber clouds) */}
+      <ShaderBackgroundCanvas />
+
+      {/* 2. Responsive Main Experience: Full-width on laptop / desktop with wide cards & Google Maps, and mobile-friendly on smartphones */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col items-center">
+        <main className="w-full max-w-xl sm:max-w-2xl bg-[#090b10]/92 border border-zinc-800/80 rounded-[32px] sm:rounded-[40px] shadow-[0_0_90px_rgba(0,0,0,0.95)] backdrop-blur-2xl overflow-hidden flex flex-col transition-all duration-300">
+          {content}
+
+          {/* Floating Toast Notification */}
+          {toastMsg && (
+            <div className="fixed bottom-24 max-w-sm mx-auto left-4 right-4 bg-zinc-900 border border-amber-500/40 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-2xl z-50 animate-fade-in flex items-center gap-2">
+              <Sparkles size={16} className="text-amber-400" />
+              <span>{toastMsg}</span>
+            </div>
+          )}
+        </main>
       </div>
-
-      {/* Main Responsive Mobile Frame */}
-      <main className="relative w-full max-w-[440px] min-h-screen sm:min-h-[860px] sm:my-8 bg-[#090A0E] sm:rounded-[36px] sm:border sm:border-zinc-800 sm:shadow-[0_0_80px_rgba(0,0,0,0.95)] overflow-x-hidden flex flex-col">
-        {content}
-
-        {/* Floating Toast Notification */}
-        {toastMsg && (
-          <div className="fixed left-5 right-5 bottom-24 max-w-[400px] mx-auto bg-zinc-900 border border-amber-500/40 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-2xl z-50 animate-fade-in flex items-center gap-2">
-            <Sparkles size={16} className="text-amber-400" />
-            <span>{toastMsg}</span>
-          </div>
-        )}
-      </main>
     </div>
   );
 }
