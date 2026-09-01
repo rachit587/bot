@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+/* ============================================
+   BOUNCERS ON TIPS — Next-Gen Dark & Gold Design System
+   ============================================ */
+
+@theme inline {
+  /* Brand Colors */
+  --color-bot-bg: #070707;
+  --color-bot-card: #121212;
+  --color-bot-elevated: #1A1A1A;
+  --color-bot-border: #2C2C2C;
+  --color-bot-text: #F8F8F8;
+  --color-bot-text-secondary: #9E9E9E;
+  --color-bot-metallic: #D4D4D8;
+  --color-bot-white: #FFFFFF;
+  --color-bot-gold: #F59E0B;
+  --color-bot-gold-neon: #FBBF24;
+  --color-bot-gold-bright: #FDE047;
+  --color-bot-gold-dark: #B45309;
+  --color-bot-silver: #E2E8F0;
+  --color-bot-success: #22C55E;
+  --color-bot-danger: #EF4444;
+  --color-bot-warning: #F59E0B;
+  --color-bot-info: #38BDF8;
+
+  /* Fonts */
+  --font-sans: var(--font-inter);
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pulse-gold: pulse-gold 2s ease-in-out infinite;
+  --animate-radar-spin: radar-spin 3s linear infinite;
+  --animate-bounce-in: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --animate-glow: glow-pulse 2.5s ease-in-out infinite;
+  --animate-float: float 4s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+  50% { box-shadow: 0 0 0 16px rgba(245, 158, 11, 0); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6)); }
+  50% { filter: drop-shadow(0 0 24px rgba(251, 191, 36, 0.9)); }
+}
+
+@keyframes radar-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes bounce-in {
+  0% { opacity: 0; transform: scale(0.6); }
+  60% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ---- Base Setup ---- */
+:root {
+  --background: #070707;
+  --foreground: #F8F8F8;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Glowing Utilities ---- */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FDE047 30%, #F59E0B 70%, #D97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-silver {
+  background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 50%, #94A3B8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.btn-neon-gold {
+  background: linear-gradient(135deg, #FDE047 0%, #F59E0B 50%, #D97706 100%);
+  color: #070707;
+  font-weight: 800;
+  box-shadow: 0 4px 20px -2px rgba(245, 158, 11, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-neon-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px 0px rgba(245, 158, 11, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.btn-neon-gold:active {
+  transform: translateY(1px);
+}
+
+.border-neon-gold {
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.glass-surface {
+  background: rgba(18, 18, 18, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Custom Calendar and Time Inputs */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(100%) saturate(300%) hue-rotate(5deg);
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #070707;
+}
+::-webkit-scrollbar-thumb {
+  background: #2C2C2C;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F59E0B;
+}
