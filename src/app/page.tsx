@@ -1062,48 +1062,55 @@ function StepSummary({
 }
 
 /* -------------------------------------------------------------------------
-   SCREEN: ULTRA-FAST LIVE RADAR MATCHING (~1.5s Execution)
+   SCREEN: ULTRA-FAST LIVE RADAR MATCHING (Guaranteed Transition)
 ------------------------------------------------------------------------- */
 function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: any[]) => void }) {
-  const needed = Math.min(booking.count || 2, 6);
+  const needed = Math.max(1, Math.min(booking.count || 2, 6));
   const totalNotified = needed + 8;
-  const [candidates, setCandidates] = useState(() =>
-    Array.from({ length: totalNotified }).map(() => makeCandidate(booking.gender || "any"))
-  );
+  
+  // Stable list of candidates generated once
+  const initialCandidates = useMemo(() => {
+    return Array.from({ length: totalNotified }).map(() => makeCandidate(booking.gender || "any"));
+  }, [totalNotified, booking.gender]);
+
+  const [candidates, setCandidates] = useState<any[]>(initialCandidates);
   const [accepted, setAccepted] = useState<any[]>([]);
-  const [rejected, setRejected] = useState(0);
-  const hasFinished = useRef(false);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
 
   useEffect(() => {
-    let accList: any[] = [];
-    
-    // Fast simulated responses every 250ms
-    const interval = setInterval(() => {
-      if (accList.length < needed) {
-        const nextCand = candidates[accList.length];
-        if (nextCand) {
-          soundEffects.playTap();
-          const acceptedCand = { ...nextCand, status: "accepted" as const };
-          accList.push(acceptedCand);
-          setAccepted([...accList]);
-          setCandidates((prev) =>
-            prev.map((c, i) => (i === accList.length - 1 ? acceptedCand : c))
-          );
+    let currentAccepted: any[] = [];
+    const timers: NodeJS.Timeout[] = [];
+
+    // Schedule rapid acceptance for each required bouncer (250ms cadence)
+    for (let i = 0; i < needed; i++) {
+      const delay = (i + 1) * 350;
+      const t = setTimeout(() => {
+        soundEffects.playTap();
+        const cand = initialCandidates[i] || makeCandidate(booking.gender || "any");
+        const acceptedCand = { ...cand, status: "accepted" as const };
+        currentAccepted.push(acceptedCand);
+        setAccepted([...currentAccepted]);
+        setCandidates((prev) =>
+          prev.map((c, idx) => (idx === i ? acceptedCand : c))
+        );
+
+        // When all needed bouncers have accepted, trigger celebratory chime and move forward
+        if (currentAccepted.length >= needed) {
+          soundEffects.playSuccessChime();
+          const finalTimer = setTimeout(() => {
+            onDoneRef.current(currentAccepted);
+          }, 600);
+          timers.push(finalTimer);
         }
-      } else if (!hasFinished.current) {
-        hasFinished.current = true;
-        clearInterval(interval);
-        soundEffects.playSuccessChime();
-        setTimeout(() => {
-          onDone(accList.slice(0, needed));
-        }, 400);
-      }
-    }, 280);
+      }, delay);
+      timers.push(t);
+    }
 
-    return () => clearInterval(interval);
-  }, [needed, candidates, onDone]);
+    return () => timers.forEach(clearTimeout);
+  }, [needed, initialCandidates, booking.gender]);
 
-  const waiting = Math.max(0, totalNotified - accepted.length - rejected);
+  const waiting = Math.max(0, totalNotified - accepted.length);
   const pct = Math.round((accepted.length / needed) * 100);
 
   return (
@@ -1146,7 +1153,7 @@ function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: 
           <div className="text-[10px] font-bold text-zinc-400 uppercase">Accepted</div>
         </div>
         <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center">
-          <div className="text-xl font-black text-rose-400">{rejected}</div>
+          <div className="text-xl font-black text-rose-400">0</div>
           <div className="text-[10px] font-bold text-zinc-400 uppercase">Declined</div>
         </div>
         <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-center">
@@ -1567,7 +1574,7 @@ export default function App() {
         style={{ background: '#050608' }}
       />
 
-      {/* 2. Seamless Full-Screen Main Application Container (Edge-to-edge on mobile, perfectly centered on laptop) */}
+      {/* 2. Seamless Full-Screen Main Application Container (Edge-to-edge on mobile, centered on laptop) */}
       <div className="relative z-10 w-full min-h-screen flex justify-center">
         <main className="w-full max-w-md sm:max-w-lg min-h-screen bg-[#07080d]/92 border-x border-zinc-800/40 shadow-[0_0_80px_rgba(0,0,0,0.95)] backdrop-blur-2xl flex flex-col justify-between">
           {content}
