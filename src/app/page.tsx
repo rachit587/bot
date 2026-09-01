@@ -1053,61 +1053,48 @@ function StepSummary({
 }
 
 /* -------------------------------------------------------------------------
-   SCREEN: ULTRA-FAST LIVE RADAR MATCHING
+   SCREEN: ULTRA-FAST LIVE RADAR MATCHING (Guaranteed ~1.5s Execution)
 ------------------------------------------------------------------------- */
 function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: any[]) => void }) {
-  const needed = Math.min(booking.count || 2, 8);
-  const totalNotified = needed + 10;
+  const needed = Math.min(booking.count || 2, 6);
+  const totalNotified = needed + 8;
   const [candidates, setCandidates] = useState(() =>
     Array.from({ length: totalNotified }).map(() => makeCandidate(booking.gender || "any"))
   );
   const [accepted, setAccepted] = useState<any[]>([]);
   const [rejected, setRejected] = useState(0);
-  const timers = useRef<NodeJS.Timeout[]>([]);
+  const hasFinished = useRef(false);
 
   useEffect(() => {
-    let acceptedCount = 0;
-    let t = 100;
-    const order = [...candidates].sort(() => Math.random() - 0.5);
+    let accList: any[] = [];
+    
+    // Fast simulated responses every 250ms
+    const interval = setInterval(() => {
+      if (accList.length < needed) {
+        const nextCand = candidates[accList.length];
+        if (nextCand) {
+          soundEffects.playTap();
+          const acceptedCand = { ...nextCand, status: "accepted" as const };
+          accList.push(acceptedCand);
+          setAccepted([...accList]);
+          setCandidates((prev) =>
+            prev.map((c, i) => (i === accList.length - 1 ? acceptedCand : c))
+          );
+        }
+      } else if (!hasFinished.current) {
+        hasFinished.current = true;
+        clearInterval(interval);
+        soundEffects.playSuccessChime();
+        setTimeout(() => {
+          onDone(accList.slice(0, needed));
+        }, 400);
+      }
+    }, 280);
 
-    order.forEach((c) => {
-      // Much faster response interval (150ms - 320ms per candidate)
-      t += rand(140, 260);
-      const timer = setTimeout(() => {
-        setCandidates((prev) => {
-          const willAccept = acceptedCount < needed && Math.random() < 0.75;
-          const idx = prev.findIndex((p) => p.id === c.id);
-          if (idx === -1) return prev;
-          const next = [...prev];
-          if (willAccept && acceptedCount < needed) {
-            acceptedCount += 1;
-            soundEffects.playTap();
-            next[idx] = { ...next[idx], status: "accepted" };
-            setAccepted((a) => (a.find((x) => x.id === c.id) ? a : [...a, next[idx]]));
-          } else if (acceptedCount >= needed) {
-            next[idx] = { ...next[idx], status: "expired" };
-          } else {
-            next[idx] = { ...next[idx], status: "rejected" };
-            setRejected((r) => r + 1);
-          }
-          return next;
-        });
-      }, t);
-      timers.current.push(timer);
-    });
+    return () => clearInterval(interval);
+  }, [needed, candidates, onDone]);
 
-    return () => timers.current.forEach(clearTimeout);
-  }, []);
-
-  useEffect(() => {
-    if (accepted.length >= needed) {
-      soundEffects.playSuccessChime();
-      const done = setTimeout(() => onDone(accepted.slice(0, needed)), 500);
-      return () => clearTimeout(done);
-    }
-  }, [accepted, needed, onDone]);
-
-  const waiting = candidates.filter((c) => c.status === "waiting").length;
+  const waiting = Math.max(0, totalNotified - accepted.length - rejected);
   const pct = Math.round((accepted.length / needed) * 100);
 
   return (
@@ -1134,7 +1121,7 @@ function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: 
             strokeDasharray={2 * Math.PI * 76}
             strokeDashoffset={2 * Math.PI * 76 * (1 - Math.min(pct, 100) / 100)}
             strokeLinecap="round"
-            className="transition-all duration-300 ease-out"
+            className="transition-all duration-200 ease-out"
           />
         </svg>
 
@@ -1160,37 +1147,25 @@ function LiveRadarScreen({ booking, onDone }: { booking: any; onDone: (members: 
       </div>
 
       <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
-        {candidates
-          .filter((c) => c.status !== "expired" && c.status !== "waiting")
-          .slice(-5)
-          .reverse()
-          .map((c) => (
-            <div
-              key={c.id}
-              className={`flex items-center gap-2.5 p-2 rounded-xl bg-zinc-900/90 border transition-all ${
-                c.status === "accepted" ? "border-emerald-500/40 bg-emerald-950/20" : "border-zinc-800"
-              }`}
-            >
-              {c.gender === "female" ? (
-                <FemaleBouncerAvatar className="w-8 h-8" />
-              ) : (
-                <MaleBouncerAvatar className="w-8 h-8" />
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-black text-white truncate">{c.name}</div>
-                <div className="text-[9.5px] text-zinc-400">{c.distance} km away • ★ {c.rating}</div>
-              </div>
-              {c.status === "accepted" ? (
-                <span className="flex items-center gap-1 text-[11px] font-black text-emerald-400">
-                  <Check size={12} /> Accepted
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-[11px] font-black text-rose-400">
-                  <X size={12} /> Declined
-                </span>
-              )}
+        {accepted.map((c) => (
+          <div
+            key={c.id}
+            className="flex items-center gap-2.5 p-2 rounded-xl bg-zinc-900/90 border border-emerald-500/40 bg-emerald-950/20 transition-all animate-fade-in"
+          >
+            {c.gender === "female" ? (
+              <FemaleBouncerAvatar className="w-8 h-8" />
+            ) : (
+              <MaleBouncerAvatar className="w-8 h-8" />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-black text-white truncate">{c.name}</div>
+              <div className="text-[9.5px] text-zinc-400">{c.distance} km away • ★ {c.rating}</div>
             </div>
-          ))}
+            <span className="flex items-center gap-1 text-[11px] font-black text-emerald-400">
+              <Check size={12} /> Accepted
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
