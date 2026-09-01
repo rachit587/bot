@@ -3,46 +3,32 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   ShieldCheck,
-  Users,
   PartyPopper,
   GraduationCap,
   Heart,
   Building2,
   Crown,
   Plane,
-  ShieldAlert,
-  Search,
-  Navigation,
   ChevronLeft,
-  ChevronRight,
   Check,
-  X,
   Star,
   Clock,
-  Calendar as CalendarIcon,
   Phone,
   MessageCircle,
-  Home as HomeIcon,
-  Bookmark,
   User as UserIcon,
   MapPin,
   Zap,
-  ChevronDown,
   Plus,
   Minus,
   ShieldQuestion,
   Sparkles,
   Radio as RadarIcon,
   ArrowRight,
-  LogOut,
-  Bell,
   AlertTriangle,
   CheckCircle2,
   Award,
   Flame,
-  Activity,
   Lock,
-  Smartphone,
 } from "lucide-react";
 import { MaleBouncerAvatar, FemaleBouncerAvatar, MixedTeamAvatar } from "@/components/ui/BouncerAvatars";
 import GoogleMapPicker from "@/components/maps/GoogleMapPicker";
@@ -866,30 +852,94 @@ function StepDateTime({
   next: () => void;
   back: () => void;
 }) {
-  const times = ["6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM", "11:00 PM"];
-  const durations = [1, 2, 3, 4, 6];
   const [date, setDate] = useState(booking.date || new Date().toISOString().split("T")[0]);
-  const [time, setTime] = useState(booking.time || "8:00 PM");
+  const [selectedHour, setSelectedHour] = useState(8);
+  const [selectedMinute, setSelectedMinute] = useState(0);
+  const [meridiem, setMeridiem] = useState<"AM" | "PM">("PM");
   const [duration, setDuration] = useState(booking.duration || 3);
+  const [activeTab, setActiveTab] = useState<"presets" | "custom">("presets");
+
+  // Format current state into formatted time string (e.g., "8:00 PM")
+  const formattedTime = `${selectedHour}:${selectedMinute.toString().padStart(2, "0")} ${meridiem}`;
+
+  const presetTimes = [
+    { label: "⚡ Now", h: (new Date().getHours() % 12 || 12), m: Math.ceil(new Date().getMinutes() / 15) * 15 % 60, mer: new Date().getHours() >= 12 ? "PM" : "AM" },
+    { label: "7:00 PM", h: 7, m: 0, mer: "PM" },
+    { label: "8:00 PM", h: 8, m: 0, mer: "PM" },
+    { label: "9:30 PM", h: 9, m: 30, mer: "PM" },
+    { label: "10:00 PM", h: 10, m: 0, mer: "PM" },
+    { label: "11:30 PM", h: 11, m: 30, mer: "PM" },
+  ];
+
+  const durations = [1, 2, 3, 4, 6, 8];
 
   function endTime() {
-    const [t, mer] = time.split(" ");
-    let [h, m] = t.split(":").map(Number);
-    let h24 = mer === "PM" && h !== 12 ? h + 12 : mer === "AM" && h === 12 ? 0 : h;
+    let h24 = meridiem === "PM" && selectedHour !== 12 ? selectedHour + 12 : meridiem === "AM" && selectedHour === 12 ? 0 : selectedHour;
     let end = (h24 + duration) % 24;
     const endMer = end >= 12 ? "PM" : "AM";
     let endH = end % 12;
     if (endH === 0) endH = 12;
-    return `${endH}:${m.toString().padStart(2, "0")} ${endMer}`;
+    return `${endH}:${selectedMinute.toString().padStart(2, "0")} ${endMer}`;
   }
+
+  const handlePresetSelect = (preset: typeof presetTimes[0]) => {
+    soundEffects.playTap();
+    setSelectedHour(preset.h);
+    setSelectedMinute(preset.m);
+    setMeridiem(preset.mer as "AM" | "PM");
+  };
+
+  const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    soundEffects.playTap();
+    setSelectedHour(parseInt(e.target.value, 10));
+  };
+
+  const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    soundEffects.playTap();
+    setSelectedMinute(parseInt(e.target.value, 10));
+  };
+
+  const toggleMeridiem = (mer: "AM" | "PM") => {
+    soundEffects.playTap();
+    setMeridiem(mer);
+  };
 
   return (
     <div>
       <TopBar title="Schedule Date & Time" onBack={back} stepText="Step 6 of 7" />
       <ProgressDots step={6} total={7} />
       <div className="px-5 pb-6 space-y-4">
+        {/* Date Selector */}
         <div>
-          <div className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">DATE</div>
+          <div className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">SERVICE DATE</div>
+          <div className="flex gap-2 mb-2">
+            {[
+              { label: "Today", val: new Date().toISOString().split("T")[0] },
+              {
+                label: "Tomorrow",
+                val: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+              },
+            ].map((d) => {
+              const sel = date === d.val;
+              return (
+                <button
+                  key={d.label}
+                  type="button"
+                  onClick={() => {
+                    soundEffects.playTap();
+                    setDate(d.val);
+                  }}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    sel
+                      ? "bg-amber-400 text-black shadow-md shadow-amber-500/20"
+                      : "bg-zinc-900 border border-zinc-800 text-zinc-300"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
           <input
             type="date"
             value={date}
@@ -897,45 +947,168 @@ function StepDateTime({
               soundEffects.playTap();
               setDate(e.target.value);
             }}
-            className="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl px-4 py-3 text-xs sm:text-sm text-zinc-100 font-bold focus:outline-none focus:border-amber-400"
+            className="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-100 font-bold focus:outline-none focus:border-amber-400 cursor-pointer"
           />
         </div>
 
+        {/* Start Time Custom Slider & Controls */}
         <div>
-          <div className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">START TIME</div>
-          <div className="grid grid-cols-3 gap-2">
-            {times.map((t) => (
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-black text-zinc-400 uppercase tracking-wider">START TIME</span>
+            <div className="flex gap-1 p-0.5 rounded-lg bg-zinc-900 border border-zinc-800">
               <button
-                key={t}
+                type="button"
                 onClick={() => {
                   soundEffects.playTap();
-                  setTime(t);
+                  setActiveTab("presets");
                 }}
-                className={`py-3 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
-                  time === t
-                    ? "bg-amber-400 text-black shadow-md shadow-amber-500/20"
-                    : "bg-zinc-900 border border-zinc-800 text-zinc-300"
+                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all cursor-pointer ${
+                  activeTab === "presets" ? "bg-amber-400 text-black shadow" : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
-                {t}
+                Quick
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => {
+                  soundEffects.playTap();
+                  setActiveTab("custom");
+                }}
+                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all cursor-pointer ${
+                  activeTab === "custom" ? "bg-amber-400 text-black shadow" : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Custom Slider
+              </button>
+            </div>
           </div>
+
+          {/* Large Time Display Card */}
+          <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-amber-500/30 flex items-center justify-between shadow-inner mb-3">
+            <div className="flex items-baseline gap-2">
+              <Clock size={20} className="text-amber-400" />
+              <span className="text-2xl sm:text-3xl font-black tracking-wider text-white">
+                {selectedHour.toString().padStart(2, "0")} : {selectedMinute.toString().padStart(2, "0")}
+              </span>
+            </div>
+
+            {/* AM / PM Segmented Toggle */}
+            <div className="flex gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+              <button
+                type="button"
+                onClick={() => toggleMeridiem("AM")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  meridiem === "AM"
+                    ? "bg-amber-400 text-black shadow-md shadow-amber-500/30"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                AM
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleMeridiem("PM")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  meridiem === "PM"
+                    ? "bg-amber-400 text-black shadow-md shadow-amber-500/30"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                PM
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Presets Grid */}
+          {activeTab === "presets" ? (
+            <div className="grid grid-cols-3 gap-2">
+              {presetTimes.map((p, idx) => {
+                const isSel = selectedHour === p.h && selectedMinute === p.m && meridiem === p.mer;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handlePresetSelect(p)}
+                    className={`py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                      isSel
+                        ? "bg-amber-400 text-black shadow-md shadow-amber-500/20 scale-[1.02]"
+                        : "bg-zinc-900 border border-zinc-800 text-zinc-300 hover:border-zinc-700"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            /* Interactive Custom Sliders */
+            <div className="space-y-3.5 p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800">
+              {/* Hour Slider (1 - 12) */}
+              <div>
+                <div className="flex justify-between text-xs font-bold text-zinc-300 mb-1.5">
+                  <span>Hour (1 – 12)</span>
+                  <span className="text-amber-400 font-black">{selectedHour} {meridiem}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="12"
+                  step="1"
+                  value={selectedHour}
+                  onChange={handleHourChange}
+                  className="w-full accent-amber-400 h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-zinc-500 font-bold px-0.5 mt-1">
+                  <span>1</span>
+                  <span>3</span>
+                  <span>6</span>
+                  <span>9</span>
+                  <span>12</span>
+                </div>
+              </div>
+
+              {/* Minute Slider (0 - 55 in steps of 5) */}
+              <div>
+                <div className="flex justify-between text-xs font-bold text-zinc-300 mb-1.5">
+                  <span>Minute (00 – 55)</span>
+                  <span className="text-amber-400 font-black">{selectedMinute.toString().padStart(2, "0")} min</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="55"
+                  step="5"
+                  value={selectedMinute}
+                  onChange={handleMinuteChange}
+                  className="w-full accent-amber-400 h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-zinc-500 font-bold px-0.5 mt-1">
+                  <span>:00</span>
+                  <span>:15</span>
+                  <span>:30</span>
+                  <span>:45</span>
+                  <span>:55</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Duration Selection */}
         <div>
           <div className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
             DURATION (MINIMUM 1 HOUR)
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {durations.map((d) => (
               <button
                 key={d}
+                type="button"
                 onClick={() => {
                   soundEffects.playTap();
                   setDuration(d);
                 }}
-                className={`flex-1 py-3 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
                   duration === d
                     ? "bg-amber-400 text-black shadow-md shadow-amber-500/20"
                     : "bg-zinc-900 border border-zinc-800 text-zinc-300"
@@ -947,14 +1120,13 @@ function StepDateTime({
           </div>
         </div>
 
-        {date && (
-          <Card className="flex items-center justify-center gap-2 py-3 bg-amber-500/10 border-amber-500/30">
-            <Clock size={16} className="text-amber-400" />
-            <span className="text-xs font-black text-white">
-              Service: {time} → {endTime()} ({duration} hrs)
-            </span>
-          </Card>
-        )}
+        {/* Calculated Service Time Summary */}
+        <Card className="flex items-center justify-center gap-2 py-3 bg-amber-500/10 border-amber-500/30">
+          <Clock size={16} className="text-amber-400" />
+          <span className="text-xs font-black text-white">
+            Service Window: {formattedTime} → {endTime()} ({duration} hrs)
+          </span>
+        </Card>
       </div>
 
       <BottomBar>
@@ -962,7 +1134,13 @@ function StepDateTime({
           label="Continue"
           fullWidth={true}
           onClick={() => {
-            setBooking({ ...booking, date, time, duration, endTime: endTime() });
+            setBooking({
+              ...booking,
+              date,
+              time: formattedTime,
+              duration,
+              endTime: endTime(),
+            });
             next();
           }}
           icon={ArrowRight}
