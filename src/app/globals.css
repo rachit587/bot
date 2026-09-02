@@ -179,6 +179,9 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   100% { transform: translate(-50%, -50%) scale(4.5); opacity: 0; }
 }
 
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
 .liquid-outer-glow {
   background: linear-gradient(
     90deg,

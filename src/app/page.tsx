@@ -150,7 +150,8 @@ function TopBrandLogo() {
       <img
         src="/logo.png"
         alt="BOT - Bouncers On Tips"
-        className="h-12 sm:h-14 w-auto object-contain drop-shadow-[0_4px_16px_rgba(245,158,11,0.5)]"
+        className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_6px_28px_rgba(245,158,11,0.65)]"
+        style={{ filter: 'drop-shadow(0 0 18px rgba(245,158,11,0.5))' }}
       />
     </div>
   );
@@ -275,110 +276,183 @@ function BottomBar({ children }: { children: React.ReactNode }) {
 /* -------------------------------------------------------------------------
    SCREEN 1: LUXURY HERO & RADAR LANDING
 ------------------------------------------------------------------------- */
-function LandingScreen({ go, toast }: { go: (step: string) => void; toast: (m: string) => void }) {
+function LandingScreen({ go }: { go: (step: string) => void; toast: (m: string) => void }) {
+  const [activeBouncers, setActiveBouncers] = React.useState(18);
+  const [pulseIndex, setPulseIndex] = React.useState(0);
+
+  // Simulate live bouncer count fluctuating
+  React.useEffect(() => {
+    const t = setInterval(() => {
+      setActiveBouncers(prev => prev + (Math.random() > 0.5 ? 1 : -1));
+    }, 3000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Cycle through animated trust pills
+  React.useEffect(() => {
+    const t = setInterval(() => setPulseIndex(p => (p + 1) % 3), 2200);
+    return () => clearInterval(t);
+  }, []);
+
+  const trustPills = [
+    { icon: '🛡️', text: 'Police-verified ID on every bouncer' },
+    { icon: '📍', text: 'Live GPS tracking of your team' },
+    { icon: '💳', text: 'Secure escrow — pay only after match' },
+  ];
+
+  const featureTags = [
+    { label: 'Arm Guards', emoji: '💪' },
+    { label: 'Women\'s Safety', emoji: '🌸' },
+    { label: 'VIP Escort', emoji: '👑' },
+    { label: 'Event Security', emoji: '🎭' },
+    { label: 'Bodycam Active', emoji: '📷' },
+    { label: '24/7 SOS Desk', emoji: '🚨' },
+  ];
+
   return (
-    <div className="min-h-full flex flex-col justify-between">
+    <div className="min-h-full flex flex-col">
+
       {/* 1. TOP BRAND HEADER */}
-      <div className="px-5 pt-5 flex items-center justify-between">
+      <div className="px-5 pt-4 flex items-start justify-between">
         <TopBrandLogo />
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900/90 border border-amber-500/30 backdrop-blur-md shadow-lg">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span className="text-xs font-black text-zinc-200 tracking-wide">18 Bouncers Active</span>
+        <div className="flex flex-col items-end gap-1.5 pt-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 backdrop-blur-md shadow-lg">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="text-xs font-black text-emerald-300 tracking-wide">{activeBouncers} On Duty Now</span>
+          </div>
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-zinc-900/70 border border-amber-500/20">
+            <span className="text-amber-400 text-[10px] font-black">★ 4.9</span>
+            <span className="text-zinc-400 text-[9px]">• Bengaluru</span>
+          </div>
         </div>
       </div>
 
-      {/* 2. HERO STATEMENT */}
-      <div className="px-5 pt-5 text-left">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-black uppercase tracking-wider mb-2.5">
-          <Flame size={13} className="text-amber-400" />
-          <span>India&apos;s 1st On-Demand Security App</span>
+      {/* 2. HERO HEADLINE */}
+      <div className="px-5 pt-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] font-black uppercase tracking-widest mb-3 animate-[fade-in_0.5s_ease]">
+          <Flame size={12} className="text-amber-400 animate-pulse" />
+          <span>India&apos;s First On-Demand Security App</span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-[1.08]">
-          Your Backup. <br />
-          <span
-            style={{
-              background: GOLD_GRAD,
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
+
+        <h1 className="text-[2.15rem] sm:text-5xl font-black text-white tracking-tight leading-[1.06]">
+          Your Backup.
+          <br />
+          <span style={{ background: GOLD_GRAD, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             On Demand.
           </span>
         </h1>
-        <p className="text-zinc-300 text-xs sm:text-sm mt-2 leading-relaxed">
-          Book vetted bulky bouncers, women&apos;s safety specialists, and VIP bodyguards with live Google Maps telemetry.
+
+        <p className="text-zinc-400 text-[13px] mt-2.5 leading-relaxed max-w-xs">
+          Real bouncers. Real-time. Deployed to your exact GPS pin — not an agency, not a middleman.
         </p>
+
+        {/* Animated rotating trust pill */}
+        <div className="mt-3 h-8 overflow-hidden">
+          {trustPills.map((pill, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 transition-all duration-500"
+              style={{
+                opacity: pulseIndex === i ? 1 : 0,
+                transform: `translateY(${(i - pulseIndex) * 32}px)`,
+                position: 'absolute',
+              }}
+            >
+              <span className="text-sm">{pill.icon}</span>
+              <span className="text-xs font-bold text-zinc-300">{pill.text}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* 3. DYNAMIC RADAR VISUALIZER */}
-      <div className="relative h-60 sm:h-72 my-2 flex items-center justify-center">
+      {/* 3. RADAR VISUALIZER */}
+      <div className="relative h-56 sm:h-64 my-1 flex items-center justify-center">
         <HeroRadarVisualizer />
       </div>
 
-      {/* 4. PRIMARY CTAs WITH LIQUID METAL SHADER BUTTON */}
-      <div className="px-5 flex flex-col gap-3">
-        <div className="w-full flex justify-center">
-          <LiquidMetalButton
-            label="⚡ Book Bouncers Now"
-            fullWidth={true}
-            onClick={() => go("purpose")}
-            icon={ArrowRight}
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => toast("Bouncer Partner Onboarding is open.")}
-          className="w-full py-3.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-zinc-300 font-bold text-xs hover:bg-zinc-800 transition-all cursor-pointer backdrop-blur-md"
-        >
-          Become a BOT Partner
-        </button>
-      </div>
-
-      {/* 5. TRUST & SAFETY BADGES */}
-      <div className="px-5 mt-6">
-        <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 text-center">
-          <div>
-            <div className="text-base font-black text-amber-400">4.9★</div>
-            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">4,800+ Bookings</div>
-          </div>
-          <div className="border-x border-zinc-800">
-            <div className="text-base font-black text-amber-400">&lt; 3m</div>
-            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Fastest Match</div>
-          </div>
-          <div>
-            <div className="text-base font-black text-emerald-400">100%</div>
-            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Police Verified</div>
-          </div>
-        </div>
-      </div>
-
-      {/* 6. HOW IT WORKS */}
-      <div className="px-5 pt-6 pb-6">
-        <div className="text-xs font-black text-zinc-400 tracking-wider uppercase mb-2.5">
-          HOW IT WORKS
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {[
-            { step: "1", title: "Select your requirement", desc: "Choose party, women's safety, or VIP guard" },
-            { step: "2", title: "Choose squad & gear", desc: "Select male, female, or mixed armored squads" },
-            { step: "3", title: "Instant escrow authorization", desc: "Secure 1-click UPI/Card payment" },
-            { step: "4", title: "Fast radar dispatch", desc: "Nearby bouncers confirm in real time" },
-          ].map((item) => (
+      {/* 4. SCROLLING FEATURE TAGS */}
+      <div className="px-5 mb-3">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {featureTags.map((tag) => (
             <div
-              key={item.step}
-              className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50"
+              key={tag.label}
+              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-700/60 text-[11px] font-bold text-zinc-300"
             >
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xs font-black text-amber-400">
+              <span>{tag.emoji}</span>
+              <span>{tag.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 5. PRIMARY CTA */}
+      <div className="px-5">
+        <LiquidMetalButton
+          label="⚡  Book Bouncers Now"
+          fullWidth={true}
+          onClick={() => go("purpose")}
+          icon={ArrowRight}
+        />
+      </div>
+
+      {/* 6. ANIMATED STATS ROW */}
+      <div className="px-5 mt-4">
+        <div className="grid grid-cols-3 gap-2 p-3.5 rounded-2xl bg-zinc-950/90 border border-zinc-800/90">
+          {[
+            { value: '4,800+', label: 'Assignments Done', color: 'text-amber-400', pulse: true },
+            { value: '< 3 min', label: 'Avg Match Time', color: 'text-amber-300', pulse: false },
+            { value: '100%', label: 'Police Verified', color: 'text-emerald-400', pulse: false },
+          ].map((stat, i) => (
+            <div key={i} className={`text-center ${i === 1 ? 'border-x border-zinc-800' : ''}`}>
+              <div className={`text-sm font-black ${stat.color} ${stat.pulse ? 'animate-pulse' : ''}`}>{stat.value}</div>
+              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-tight mt-0.5 leading-tight">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 7. THOUGHT / WHY BOT */}
+      <div className="px-5 mt-5">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-950/30 to-zinc-900/60 border border-amber-800/30">
+          <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Why Bouncers on Tips?</div>
+          <div className="space-y-2">
+            {[
+              { icon: '⚡', text: 'Fastest deployment in India — bouncers dispatched in under 3 minutes.' },
+              { icon: '🔒', text: 'Every professional is police-cleared, identity-verified, and rated.' },
+              { icon: '📲', text: 'Track your entire team live on Google Maps from your phone.' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="text-sm mt-0.5 flex-shrink-0">{item.icon}</span>
+                <span className="text-[11.5px] text-zinc-300 leading-snug">{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 8. HOW IT WORKS */}
+      <div className="px-5 pt-5 pb-8">
+        <div className="text-[10px] font-black text-zinc-500 tracking-widest uppercase mb-3">How It Works</div>
+        <div className="space-y-2">
+          {[
+            { step: '01', title: 'Pick your protection type', desc: 'Women\'s safety, party bouncer, VIP escort & more' },
+            { step: '02', title: 'Set squad size & tier', desc: 'Standard, Pro Fighter or Elite Close Protection' },
+            { step: '03', title: 'Secure escrow payment', desc: '1-tap UPI / Card — held until your team arrives' },
+            { step: '04', title: 'Radar dispatches instantly', desc: 'Nearby verified bouncers accept in real time' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/40 transition-all active:scale-[0.99]">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[11px] font-black text-amber-400 flex-shrink-0">
                 {item.step}
               </div>
               <div>
-                <div className="text-xs font-bold text-zinc-200">{item.title}</div>
-                <div className="text-[10.5px] text-zinc-400">{item.desc}</div>
+                <div className="text-xs font-bold text-zinc-100">{item.title}</div>
+                <div className="text-[10.5px] text-zinc-500 mt-0.5">{item.desc}</div>
               </div>
             </div>
           ))}
         </div>
       </div>
+
     </div>
   );
 }
