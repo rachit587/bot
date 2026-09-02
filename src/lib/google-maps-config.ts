@@ -1,4 +1,4 @@
-export const GOOGLE_MAPS_API_KEY = "AIzaSyD9iXWp2a1zie3UX4Dm2IJpeXcGxpVQOk0";
+export const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 export const DEFAULT_BENGALURU_COORDS = {
   lat: 12.9716,
