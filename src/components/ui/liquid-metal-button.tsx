@@ -49,45 +49,8 @@ export function LiquidMetalButton({
 
   return (
     <div className={`relative ${fullWidth ? "w-full" : "inline-block"} ${className}`}>
-      <style jsx>{`
-        @keyframes liquid-gold-sweep {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
 
-        @keyframes liquid-ripple {
-          0% {
-            transform: translate(-50%, -50%) scale(0);
-            opacity: 0.8;
-          }
-          100% {
-            transform: translate(-50%, -50%) scale(4.5);
-            opacity: 0;
-          }
-        }
 
-        .liquid-outer-glow {
-          background: linear-gradient(
-            90deg,
-            #d97706,
-            #f59e0b,
-            #fef08a,
-            #f59e0b,
-            #d97706,
-            #fbbf24,
-            #fde047
-          );
-          background-size: 300% 300%;
-          animation: liquid-gold-sweep 4s ease infinite;
-        }
-      `}</style>
 
       {/* 1. Outer Liquid Glow Ring & Ambient Drop Shadow */}
       <div

@@ -147,7 +147,6 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   padding: 4px;
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -162,3 +161,30 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 ::-webkit-scrollbar-thumb:hover {
   background: #F59E0B;
 }
+
+/* ---- Missing Gradient Utilities ---- */
+.bg-gradient-gold {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FDE047 30%, #F59E0B 70%, #D97706 100%);
+}
+
+/* ---- Liquid Metal Button Animations ---- */
+@keyframes liquid-gold-sweep {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes liquid-ripple {
+  0%   { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(4.5); opacity: 0; }
+}
+
+.liquid-outer-glow {
+  background: linear-gradient(
+    90deg,
+    #d97706, #f59e0b, #fef08a, #f59e0b, #d97706, #fbbf24, #fde047
+  );
+  background-size: 300% 300%;
+  animation: liquid-gold-sweep 4s ease infinite;
+}
+
