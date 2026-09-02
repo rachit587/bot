@@ -225,9 +225,9 @@ export default function RapidoBookingWindow() {
           </label>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { level: 'STANDARD' as ProfessionalLevel, name: 'Standard', rate: 500, desc: 'Everyday Presence' },
-              { level: 'PRO' as ProfessionalLevel, name: 'Pro Fighter', rate: 800, desc: 'Ex-Military / Certified', tag: 'POPULAR' },
-              { level: 'ELITE' as ProfessionalLevel, name: 'Elite Guard', rate: 1200, desc: 'VIP Armed/Tactical' },
+              { level: 'STANDARD' as ProfessionalLevel, name: 'Standard', rate: 1250, desc: 'Everyday Presence' },
+              { level: 'PRO' as ProfessionalLevel, name: 'Pro Fighter', rate: 2000, desc: 'Ex-Military / Certified', tag: 'POPULAR' },
+              { level: 'ELITE' as ProfessionalLevel, name: 'Elite Guard', rate: 3000, desc: 'VIP Armed/Tactical' },
             ].map((t) => {
               const active = selectedLevel === t.level;
               return (

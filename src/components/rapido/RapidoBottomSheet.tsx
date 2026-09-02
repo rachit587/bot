@@ -285,9 +285,9 @@ export default function RapidoBottomSheet({
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { level: 'STANDARD' as ProfessionalLevel, title: 'Standard', rate: 500 },
-                    { level: 'PRO' as ProfessionalLevel, title: 'Pro Fighter', rate: 800, tag: 'MOST POPULAR' },
-                    { level: 'ELITE' as ProfessionalLevel, title: 'Elite VIP', rate: 1200 },
+                    { level: 'STANDARD' as ProfessionalLevel, title: 'Standard', rate: 1250 },
+                    { level: 'PRO' as ProfessionalLevel, title: 'Pro Fighter', rate: 2000, tag: 'MOST POPULAR' },
+                    { level: 'ELITE' as ProfessionalLevel, title: 'Elite VIP', rate: 3000 },
                   ].map((t) => {
                     const active = selectedLevel === t.level;
                     return (
